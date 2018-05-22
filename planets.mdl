@@ -1,0 +1,13 @@
+push
+move 0 250 0
+//Sun
+sphere -690 0 0 750
+
+sphere 75 0 0 5
+sphere 125 0 0 10
+sphere 160 0 0 10
+sphere 200 0 0 9
+sphere 350 0 0 100
+
+display
+save planets.png
