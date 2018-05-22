@@ -19,11 +19,14 @@ $INFILE = "script.mdl"
 $OUTFILE = "image.ppm"
 $TEMPFILE = "temmmmp.ppm" # Used as temp storage for displaying
 $COMPYLED_CODE_LOC = "__COMPYLED_CODE__"
+$OUTPUT_FOLDER = "anim/"
 $STEP = 100 # Number of iterations needed to to finish a parametric
 $AMBIENT_LIGHT = [250, 250, 250]
 $POINT_LIGHT = [[0, 0.5, 1],
                 [255, 255, 255]]
 $VIEW = [0, 0, 1]
+$FRAMES = nil
+$BASENAME = 'result'
 
 # Static
 $SCREEN = Screen.new($RESOLUTION)

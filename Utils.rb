@@ -30,13 +30,13 @@ module Utils
   end
 
   def self.write_out(file: $OUTFILE)
-    $SCREEN.write_out(file: file)
+    $SCREEN.write_out(file: $OUTPUT_FOLDER + file)
   end
 
   def self.display(tempfile: $TEMPFILE)
     write_out(file: tempfile)
-    puts %x[display #{tempfile}]
-    puts %x[rm #{tempfile}]
+    puts %x[display #{$OUTPUT_FOLDER + tempfile}]
+    puts %x[rm #{$OUTPUT_FOLDER + tempfile}]
   end
 
   def self.format_compyled_code(code)
