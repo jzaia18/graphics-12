@@ -1,19 +1,19 @@
 import lex, yacc
 
 tokens = (
-    "STRING", 
-    "ID", 
-    "XYZ", 
-    "DOUBLE", 
-    "INT", 
-    "COMMENT", 
-    "LIGHT", 
-    "CONSTANTS", 
-    "SAVE_COORDS", 
-    "CAMERA", 
-    "AMBIENT", 
-    "TORUS", 
-    "SPHERE", 
+    "STRING",
+    "ID",
+    "XYZ",
+    "DOUBLE",
+    "INT",
+    "COMMENT",
+    "LIGHT",
+    "CONSTANTS",
+    "SAVE_COORDS",
+    "CAMERA",
+    "AMBIENT",
+    "TORUS",
+    "SPHERE",
     "BOX", 
     "LINE", 
     "MESH", 
@@ -144,44 +144,74 @@ def p_NUMBER(p):
 def p_command_stack(p):
     """command : POP
                  | PUSH"""
-    commands.append((p[1],))
+    commands.append({'op' : p[1], 'args' : None})
 
 def p_command_screen(p):
-    """command : SCREEN INT INT
+    """command : SCREEN NUMBER NUMBER
                  | SCREEN"""
     if len(p) == 2:
-        commands.append((p[1], 500, 500))
+        commands.append({'op' : p[1], 'width' : 500, 'height': 500})
     else:
-        commands.append((p[1], p[2], p[3]))
+        commands.append({'op' : p[1], 'width' : p[2], 'height': p[3]})
 
 def p_command_save(p):
     """command : SAVE TEXT TEXT"""
-    commands.append(tuple(p[1:]))
+    commands.append({'op' : p[1], 'args' : [p[2]]})
 
 def p_command_show(p):
     """command : DISPLAY"""
-    commands.append(tuple(p[1:]))
+    commands.append({'op' : p[1], 'args' : None})
 
 def p_command_sphere(p):
     """command : SPHERE NUMBER NUMBER NUMBER NUMBER
                | SPHERE SYMBOL NUMBER NUMBER NUMBER NUMBER
                | SPHERE NUMBER NUMBER NUMBER NUMBER SYMBOL
                | SPHERE SYMBOL NUMBER NUMBER NUMBER NUMBER SYMBOL"""
-    commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'constants' : None, 'cs' : None, 'args':[]}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start = 3
+    if len(p) == 7 and isinstance(p[6], str):
+        cmd['cs'] = p[6]
+    if len(p) == 8 and isinstance(p[7], str):
+          cmd['cs'] = p[7]
+    cmd['args'] = p[arg_start:arg_start+4]
+    commands.append(cmd)
 
 def p_command_torus(p):
     """command : TORUS NUMBER NUMBER NUMBER NUMBER NUMBER
                | TORUS NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
                | TORUS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER
                | TORUS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL"""
-    commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'constants' : None, 'cs' : None, 'args':[]}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start = 3
+    if len(p) == 8 and isinstance(p[7], str):
+        cmd['cs'] = p[7]
+    if len(p) == 9 and isinstance(p[8], str):
+          cmd['cs'] = p[8]
+    cmd['args'] = p[arg_start:arg_start+5]
+    commands.append(cmd)
 
 def p_command_box(p):
     """command : BOX NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
                | BOX NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
                | BOX SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
                | BOX SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL"""
-    commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'constants' : None, 'cs' : None, 'args':[]}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start = 3
+    if len(p) == 9 and isinstance(p[8], str):
+        cmd['cs'] = p[8]
+    if len(p) == 10 and isinstance(p[9], str):
+          cmd['cs'] = p[9]
+    cmd['args'] = p[arg_start:arg_start+6]
+    commands.append(cmd)
 
 def p_command_line(p):
     """command : LINE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
@@ -192,107 +222,156 @@ def p_command_line(p):
                | LINE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
                | LINE SYMBOL NUMBER NUMBER NUMBER SYMBOL NUMBER NUMBER NUMBER
                | LINE SYMBOL NUMBER NUMBER NUMBER SYMBOL NUMBER NUMBER NUMBER SYMBOL"""
-    commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'constants' : None, 'cs0' : None, 'cs1' : None, 'args':[]}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start = 3
+    cmd['args'] = p[arg_start:arg_start+3]
+    arg_start = arg_start+3
+    if isinstance(p[arg_start], str):
+        cmd['cs0'] = p[arg_start]
+        arg_start+= 1
+    cmd['args']+= p[arg_start:arg_start+3]
+    if len(p) == 9 and isinstance(p[8], str):
+        cmd['cs1'] = p[8]
+    if len(p) == 10 and isinstance(p[9], str):
+        cmd['cs1'] = p[9]
+    if len(p) == 11 and isinstance(p[10], str):
+        cmd['cs1'] = p[10]
+    commands.append(cmd)
 
 def p_command_move(p):
     """command : MOVE NUMBER NUMBER NUMBER SYMBOL
                | MOVE NUMBER NUMBER NUMBER"""
-    if len(p) == 5:
-        commands.append(tuple(p[1:] + [None]))
-    else:
-        commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'args' : p[2:5], 'knob' : None}
+    if len(p) == 6:
+        cmd['knob'] = p[5]
         symbols[p[5]] = ['knob', 0]
+    commands.append(cmd)
 
 def p_command_scale(p):
     """command : SCALE NUMBER NUMBER NUMBER SYMBOL
                  | SCALE NUMBER NUMBER NUMBER"""
-    if len(p) == 5:
-        commands.append(tuple(p[1:] + [None]))
-    else:
-        commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'args' : p[2:5], 'knob' : None}
+    if len(p) == 6:
+        cmd['knob'] = p[5]
         symbols[p[5]] = ['knob', 0]
+    commands.append(cmd)
 
 def p_command_rotate(p):
     """command : ROTATE XYZ NUMBER SYMBOL
                  | ROTATE XYZ NUMBER"""
-    if len(p) == 4:
-        commands.append(tuple(p[1:] + [None]))
-    else:
-        commands.append(tuple(p[1:]))
+    cmd = {'op' : p[1], 'args' : p[2:4], 'knob' : None}
+    if len(p) == 5:
+        cmd['knob'] = p[4]
         symbols[p[4]] = ['knob', 0]
+    commands.append(cmd)
 
 def p_command_frames(p):
-    """command : FRAMES INT"""
-    commands.append(p[1:])
+    """command : FRAMES NUMBER"""
+    cmd = {'op' : p[1], 'args' : [p[2]]}
+    commands.append(cmd)
 
 def p_command_basename(p):
     """command : BASENAME TEXT"""
-    commands.append(p[1:])
+    cmd = {'op' : p[1], 'args' : [p[2]]}
+    commands.append(cmd)
 
 def p_command_vary(p):
-    """command : VARY SYMBOL INT INT NUMBER NUMBER"""
-    commands.append(p[1:])
+    """command : VARY SYMBOL NUMBER NUMBER NUMBER NUMBER"""
+    cmd = {'op' : p[1], 'args' : p[3:], 'knob' : p[2]}
     symbols[p[2]] = ['knob', 0]
+    commands.append(cmd)
 
 def p_command_knobs(p):
     """command : SET SYMBOL NUMBER
                | SET_KNOBS NUMBER"""
-    commands.append(tuple(p[1:]))
-    if p[1] == "set":
-        symbols[p[2]] = ['knob', 0]
+    cmd = {'op' : p[1], 'args' : [], 'knob' : None}
+    if p[1] == 'SET':
+        cmd['knob'] = p[2]
+        cmd['args'].append(p[3])
+        symbols[p[2]] = p[3]
+    else:
+        cmd['args'].append(p[2])
+    commands.append(cmd)
 
 def p_command_ambient(p):
-    "command : AMBIENT INT INT INT"
+    "command : AMBIENT NUMBER NUMBER NUMBER"
     symbols['ambient'] = ['ambient'] + p[2:]
+    cmd = {'op':p[1], 'args':p[2:]}
+    commands.append(cmd)
 
 def p_command_constants(p):
     """command : CONSTANTS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
                | CONSTANTS SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"""
     symbols[p[2]] = ['constants', {'red' : p[3:6], 'green' : p[6:9], 'blue' : p[9:]}]
+    cmd = {'op':p[1], 'args' : None, 'constants' : p[2] }
+    commands.append(cmd)
 
 def p_command_light(p):
-    "command : LIGHT SYMBOL NUMBER NUMBER NUMBER INT INT INT"
+    "command : LIGHT SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"
     symbols[p[2]] = ['light', {'location' : p[3:6], 'color' : p[6:]}]
+    cmd = {'op':p[1], 'args' : None, 'light' : p[2] }
+    commands.append(cmd)
 
 def p_command_shading(p):
     "command : SHADING SHADING_TYPE"
     symbols['shading'] = ['shade_type', p[2]]
+    cmd = {'op':p[1], 'args' : None, 'shade_type' : p[2] }
+    commands.append(cmd)
 
 def p_command_camera(p):
     "command : CAMERA NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"
     symbols['camera'] = ['camera', {'eye': p[2:4], 'aim': p[4:]} ]
+    commands.append({'op':p[1], 'args':None})
 
 def p_command_generate_rayfiles(p):
     "command : GENERATE_RAYFILES"
-    commands.append((p[1],))
+    commands.append({'op':p[1], 'args':None})
 
 def p_command_mesh(p):
     """command : MESH CO TEXT
                | MESH SYMBOL CO TEXT
                | MESH CO TEXT SYMBOL
                | MESH SYMBOL CO TEXT SYMBOL"""
-    commands.append((p[1:],))
+    cmd = {'op':p[1], 'args' : [], 'cs':None, 'constants':None}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start+= 1
+    cmd['args'].append(p[arg_start])
+    if len(p) == 4 and isinstance(p[3], str):
+        cmd['cs'] = p[3]
+    if len(p) == 5 and isinstance(p[4], str):
+        cmd['cs'] = p[4]
+    commands.append(cmd)
 
 def p_save_knobs(p):
     "command : SAVE_KNOBS SYMBOL"
-    commands.append((p[1:],))
+    cmd = {'op':p[1], 'args':None, 'knob_list':p[2]}
+    symbols[p[2]] = ['knob_list', []]
+    commands.append(cmd)
 
 def p_save_coords(p):
     "command : SAVE_COORDS SYMBOL"
-    commands.append((p[1:],))
+    cmd = {'op':p[1], 'args':None, 'cs':p[2]}
     symbols[p[2]] = ['coord_sys', []]
+    commands.append(cmd)
+
 
 def p_tween(p):
     "command : TWEEN NUMBER NUMBER SYMBOL SYMBOL"
-    commands.append((p[1:],))
+    cmd = {'op':p[1], 'args':p[2:4], 'knob_list0':p[4], 'knob_list1':p[5]}
+    commands.append(cmd)
 
 def p_focal(p):
     "command : FOCAL NUMBER"
-    commands.append((p[1:],))
+    commands.append({'op':p[1], 'args':[p[2]]})
 
 def p_web(p):
     "command : WEB"
-    commands.append((p[1],))
+    commands.append({'op':p[1], 'args':None})
 
 def p_texture(p):
     "command : TEXTURE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER"

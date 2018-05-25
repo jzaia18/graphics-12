@@ -55,9 +55,21 @@ module Utils
     file.close
     puts %x[rm #$COMPYLED_CODE_LOC]
 
+    puts code.to_s
+
+    #parse for basic anim commands
+    # for line in code[1]
+    #   puts line
+    #   case line[0]
+    #   when "frame"
+    #     $FRAMES = line[1]
+    #     puts line[1]
+    #   end
+    # end
+
     for line in code[0]
       puts "Executing: " + line.to_s if $DEBUGGING
-      case line[0]
+      case line[:op]
       when "line"
         if line[1].class == String #Down the rabbit hole
           if line[5].class == String
