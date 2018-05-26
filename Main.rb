@@ -26,7 +26,7 @@ $POINT_LIGHT = [[0, 0.5, 1],
                 [255, 255, 255]]
 $VIEW = [0, 0, 1]
 $FRAMES = nil
-$BASENAME = 'result'
+$BASENAME = nil
 
 # Static
 $SCREEN = Screen.new($RESOLUTION)
@@ -35,6 +35,7 @@ $RC = $DRAW_COLOR[0]; $GC = $DRAW_COLOR[1]; $BC = $DRAW_COLOR[2]
 $Ka = [0.5, 0.3, 0.1] #Constant of ambient
 $Kd = [0.9, 0.7, 0.5] #Constant of diffuse
 $Ks = [0.5, 0.5, 0.5] #Constant of specular
+$ANIMATION = nil #Boolean representing whether output will be an animation (as opposed to a still image)
 
 
 ##=================== MAIN ==========================

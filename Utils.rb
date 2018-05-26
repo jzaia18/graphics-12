@@ -55,73 +55,52 @@ module Utils
     file.close
     puts %x[rm #$COMPYLED_CODE_LOC]
 
-    puts code.to_s
+    #parse for basic anim commands, throw duplicate errors
+    for line in code[0]
+      case line[:op]
+      when "frames"
+        raise "ERROR: Duplicate definition of frames" if $FRAMES
+        $FRAMES = line[:args][0]
+        puts "frames: #{line[:args][0]}" if $DEBUGGING
+      when "basename"
+        raise "ERROR: Duplicate definition of basename" if $BASENAME
+        $FRAMES = line[:args][0]
+        puts "basename: #{line[:args][0]}" if $DEBUGGING
+      end
+    end
 
-    #parse for basic anim commands
-    # for line in code[1]
-    #   puts line
-    #   case line[0]
-    #   when "frame"
-    #     $FRAMES = line[1]
-    #     puts line[1]
-    #   end
-    # end
+    $ANIMATION = false if not $FRAMES else $ANIMATION = true
+    $BASENAME = 'output' if not $BASENAME
+
 
     for line in code[0]
       puts "Executing: " + line.to_s if $DEBUGGING
+      args = line[:args]
       case line[:op]
       when "line"
-        if line[1].class == String #Down the rabbit hole
-          if line[5].class == String
-            args = line[2..4] + line[6..8]
-          else
-            args = line[2..7]
-          end
-        else
-          if line[4].class == String
-            args = line[1..3] + line[5..7]
-          else
-            args = line[1..6]
-          end
-        end
         for i in (0...6); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         temp = Matrix.new(4,0)
         temp.add_col([args[0], args[1], args[2], 1])
         temp.add_col([args[3], args[4], args[5], 1])
         MatrixUtils.multiply($COORDSYS.peek(), temp)
         Draw.push_edge_matrix(temp)
       when "box"
-        if line[1].class == String
-          args = line[2..7]
-        else
-          args = line[1..6]
-        end
         for i in (0...6); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         temp = Matrix.new(4, 0)
         Draw.box(args[0], args[1], args[2], args[3], args[4], args[5], temp)
         MatrixUtils.multiply($COORDSYS.peek(), temp)
         Draw.push_polygon_matrix(temp)
       when "sphere"
-        if line[1].class == String
-          args = line[2..5]
-        else
-          args = line[1..4]
-        end
         for i in (0...4); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         temp = Matrix.new(4, 0)
         Draw.sphere(args[0], args[1], args[2], args[3], temp)
         Draw.push_polygon_matrix(MatrixUtils.multiply($COORDSYS.peek(), temp))
       when "torus"
-        if line[1].class == String
-          args = line[2..6]
-        else
-          args = line[1..5]
-        end
         for i in (0...5); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         temp = Matrix.new(4, 0)
         Draw.torus(args[0], args[1], args[2], args[3], args[4], temp)
         MatrixUtils.multiply($COORDSYS.peek(), temp)
@@ -129,20 +108,17 @@ module Utils
       when "clear"
         $SCREEN = Screen.new($RESOLUTION)
       when "scale"
-        args = line[1..3]
         for i in (0...3); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         scale = MatrixUtils.dilation(args[0], args[1], args[2])
         $COORDSYS.modify_top(scale);
       when "move"
-        args = line[1..3]
         for i in (0...3); args[i] = args[i].to_f end
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         move = MatrixUtils.translation(args[0], args[1], args[2])
         $COORDSYS.modify_top(move);
       when "rotate"
-        args = line[1..2]
-        puts "With arguments: "  + args.to_s if $DEBUGGING
+        puts "   With arguments: "  + args.to_s if $DEBUGGING
         rotate = MatrixUtils.rotation(args[0], args[1].to_f)
         $COORDSYS.modify_top(rotate);
       when "pop"
@@ -152,7 +128,7 @@ module Utils
       when "display"
         display();
       when "save"
-        write_out(file: line[1]+line[2])
+        write_out(file: line[:args][0] + ".png")
       when "quit", "exit"
         exit 0
 
@@ -161,7 +137,7 @@ module Utils
       # when "circle"
       #   args = file.gets.chomp.split(" ")
       #   for i in (0...4); args[i] = args[i].to_f end
-      #   puts "With arguments: "  + args.to_s if $DEBUGGING
+      #   puts "   With arguments: "  + args.to_s if $DEBUGGING
       #   temp = Matrix.new(4, 0)
       #   Draw.circle(args[0], args[1], args[2], args[3], temp)
       #   MatrixUtils.multiply($COORDSYS.peek(), temp)
@@ -169,7 +145,7 @@ module Utils
       # when "hermite"
       #   args = file.gets.chomp.split(" ")
       #   for i in (0...8); args[i] = args[i].to_f end
-      #   puts "With arguments: "  + args.to_s if $DEBUGGING
+      #   puts "   With arguments: "  + args.to_s if $DEBUGGING
       #   temp = Matrix.new(4, 0)
       #   Draw.hermite(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], temp)
       #   MatrixUtils.multiply($COORDSYS.peek(), temp)
@@ -177,15 +153,14 @@ module Utils
       # when "bezier"
       #   args = file.gets.chomp.split(" ")
       #   for i in (0...8); args[i] = args[i].to_f end
-      #   puts "With arguments: "  + args.to_s if $DEBUGGING
+      #   puts "   With arguments: "  + args.to_s if $DEBUGGING
       #   temp = Matrix.new(4, 0)
       #   Draw.bezier(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], temp)
       #   MatrixUtils.multiply($COORDSYS.peek(), temp)
       #   Draw.push_edge_matrix(temp)
       else
-        puts "ERROR: Unrecognized command: " + line.to_s
+        puts "WARNING: Unrecognized command: " + line.to_s
       end
     end
   end
-
 end
