@@ -69,7 +69,7 @@ module Utils
       end
     end
 
-    $ANIMATION = false if not $FRAMES else $ANIMATION = true
+    $ANIMATION = $FRAMES != nil
     $BASENAME = 'output' if not $BASENAME
 
 
