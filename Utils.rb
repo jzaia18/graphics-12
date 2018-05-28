@@ -30,13 +30,13 @@ module Utils
   end
 
   def self.write_out(file: $OUTFILE)
-    $SCREEN.write_out(file: $OUTPUT_FOLDER + file)
+    $ANIMATION ? $SCREEN.write_out(file: $OUTPUT_FOLDER + file) : $SCREEN.write_out(file: file)
   end
 
   def self.display(tempfile: $TEMPFILE)
     write_out(file: tempfile)
-    puts %x[display #{$OUTPUT_FOLDER + tempfile}]
-    puts %x[rm #{$OUTPUT_FOLDER + tempfile}]
+    puts %x[display #{tempfile}]
+    puts %x[rm #{tempfile}]
   end
 
   def self.format_compyled_code(code)
@@ -98,7 +98,7 @@ module Utils
           knoblen = operation["args"][1] - operation["args"][0]
           deltaknob = operation["args"][3] - operation["args"][2]
           for i in (0..knoblen)
-            $KNOBFRAMES[i+operation["args"][0]][operation["knob"]] = i*deltaknob/knoblen
+            $KNOBFRAMES[i+operation["args"][0]][operation["knob"]] = operation["args"][2] + i*deltaknob/knoblen
           end
         end
       end
@@ -109,10 +109,7 @@ module Utils
       $SCREEN = Screen.new($RESOLUTION)
       $COORDSYS = CStack.new()
       for operation in ops_list
-        if $ANIMATION
-          symbol_table = $KNOBFRAMES[currframe]
-          puts "Current Knobs: #{symbol_table}" if $DEBUGGING
-        end
+        symbol_table = $KNOBFRAMES[currframe] if $ANIMATION
         puts "Executing: " + operation.to_s if $DEBUGGING
         args = operation["args"]
         case operation["op"]
@@ -149,19 +146,22 @@ module Utils
         when "scale"
           for i in (0...3); args[i] = args[i].to_f end
           puts "   With arguments: "  + args.to_s if $DEBUGGING
-          scale = MatrixUtils.dilation(args[0], args[1], args[2])
-          scale = MatrixUtils.multiply_constant(scale, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
+          puts "   And knobs: " + symbol_table.to_s if $DEBUGGING && $ANIMATION
+          k = ($ANIMATION && symbol_table[operation["knob"]]? symbol_table[operation["knob"]]: 1)
+          scale = MatrixUtils.dilation(k*args[0], k*args[1], k*args[2])
           $COORDSYS.modify_top(scale);
         when "move"
           for i in (0...3); args[i] = args[i].to_f end
           puts "   With arguments: "  + args.to_s if $DEBUGGING
-          move = MatrixUtils.translation(args[0], args[1], args[2])
-          move = MatrixUtils.multiply_constant(move, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
+          puts "   And knobs: " + symbol_table.to_s if $DEBUGGING && $ANIMATION
+          k = ($ANIMATION && symbol_table[operation["knob"]]? symbol_table[operation["knob"]]: 1)
+          move = MatrixUtils.translation(k*args[0], k*args[1], k*args[2])
           $COORDSYS.modify_top(move);
         when "rotate"
           puts "   With arguments: "  + args.to_s if $DEBUGGING
-          rotate = MatrixUtils.rotation(args[0], args[1].to_f)
-          rotate = MatrixUtils.multiply_constant(rotate, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
+          puts "   And knobs: " + symbol_table.to_s if $DEBUGGING && $ANIMATION
+          k = ($ANIMATION && symbol_table[operation["knob"]]? symbol_table[operation["knob"]]: 1)
+          rotate = MatrixUtils.rotation(args[0], k*args[1].to_f)
           $COORDSYS.modify_top(rotate);
         when "pop"
           $COORDSYS.pop()
@@ -184,6 +184,12 @@ module Utils
           puts "FORK: frame #{currframe} finished."
         end
       end
+    end
+    if $ANIMATION
+      Process.waitall
+      print %x[convert #{$OUTPUT_FOLDER}/*#{$BASENAME}.png #{$BASENAME}.gif]
+      print %x[rm #{$OUTPUT_FOLDER}/*#{$BASENAME}.png]
+      print %x[animate #{$BASENAME}.gif]
     end
   end
 end
