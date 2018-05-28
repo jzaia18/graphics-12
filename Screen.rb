@@ -31,18 +31,18 @@ class Screen
     file[file.index('.')..-1] = '.ppm'
     #$GRID = create_grid()
     outfile = File.open(file, 'w')
-    outfile.puts "P3 #$RESOLUTION #$RESOLUTION 255" #Header in 1 line
+    outfile << "P3 #$RESOLUTION #$RESOLUTION 255\n" #Header in 1 line
 
     #Write PPM data
     for row in @rgb_grid
       for pixel in row
         for rgb in pixel
-          outfile.print rgb
-          outfile.print ' '
+          outfile << rgb
+          outfile << ' '
         end
-        outfile.print '   '
+        outfile << '   '
       end
-      outfile.puts ''
+      outfile << "\n"
     end
     outfile.close()
 

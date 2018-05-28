@@ -20,7 +20,7 @@ $OUTFILE = "image.ppm"
 $TEMPFILE = "temmmmp.ppm" # Used as temp storage for displaying
 $COMPYLED_CODE_LOC = "__COMPYLED_CODE__"
 $OUTPUT_FOLDER = "anim/"
-$STEP = 100 # Number of iterations needed to to finish a parametric
+$STEP = 10 # Number of iterations needed to to finish a parametric
 $AMBIENT_LIGHT = [250, 250, 250]
 $POINT_LIGHT = [[0, 0.5, 1],
                 [255, 255, 255]]
@@ -36,7 +36,7 @@ $Ka = [0.5, 0.3, 0.1] #Constant of ambient
 $Kd = [0.9, 0.7, 0.5] #Constant of diffuse
 $Ks = [0.5, 0.5, 0.5] #Constant of specular
 $ANIMATION = nil #Boolean representing whether output will be an animation (as opposed to a still image)
-
+$KNOBFRAMES = nil
 
 ##=================== MAIN ==========================
 ### Take in script file
