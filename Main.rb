@@ -23,7 +23,7 @@ $OUTPUT_FOLDER = "anim/"
 $STEP = 10 # Number of iterations needed to to finish a parametric
 $AMBIENT_LIGHT = [50, 50, 50]
 $POINT_LIGHT = [[0.5, 0.75, 1],
-                [0, 255, 255]]
+                [255, 12, 0]]
 $VIEW = [0, 0, 1]
 $FRAMES = nil
 $BASENAME = nil
