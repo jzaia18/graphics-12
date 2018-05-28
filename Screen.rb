@@ -47,9 +47,9 @@ class Screen
     outfile.close()
 
     #Convert filetype
-    puts %x[convert #{file} #{extension}]
+    print %x[convert #{file} #{extension}]
     if not extension["ppm"]
-      puts %x[rm #{file}] end
+      print %x[rm #{file}] end
   end
 
 

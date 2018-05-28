@@ -34,6 +34,24 @@ module MatrixUtils
     return ret
   end
 
+  def self.multiply_constant(mat, k, modify_input: true)
+    ret = Matrix.new(mat.rows, mat.cols)
+    for r in (0...ret.rows)
+      for c in (0...ret.cols)
+        ret.set(r, c, k*mat.get(r, c))
+      end
+    end
+
+    if modify_input
+      for r in (0...mat.rows)
+        for c in (0...mat.cols)
+          mat.set(r, c, ret.get(r, c))
+        end
+      end
+    end
+    return ret
+  end
+
   # Adds 2 matricies and modifies first input
   def self.add(m1, m2, modify_second: true)
     raise "Cannot add these matricies due to their dimensions" if m1.rows != m2.rows || m1.cols != m2.cols

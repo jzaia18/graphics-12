@@ -106,6 +106,8 @@ module Utils
     ops_list = ops_list.delete_if{|x| x["op"] == "vary"} #Clear useless ops
 
     for currframe in (0...$FRAMES)
+      $SCREEN = Screen.new($RESOLUTION)
+      $COORDSYS = CStack.new()
       for operation in ops_list
         if $ANIMATION
           symbol_table = $KNOBFRAMES[currframe]
@@ -148,15 +150,18 @@ module Utils
           for i in (0...3); args[i] = args[i].to_f end
           puts "   With arguments: "  + args.to_s if $DEBUGGING
           scale = MatrixUtils.dilation(args[0], args[1], args[2])
+          scale = MatrixUtils.multiply_constant(scale, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
           $COORDSYS.modify_top(scale);
         when "move"
           for i in (0...3); args[i] = args[i].to_f end
           puts "   With arguments: "  + args.to_s if $DEBUGGING
           move = MatrixUtils.translation(args[0], args[1], args[2])
+          move = MatrixUtils.multiply_constant(move, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
           $COORDSYS.modify_top(move);
         when "rotate"
           puts "   With arguments: "  + args.to_s if $DEBUGGING
           rotate = MatrixUtils.rotation(args[0], args[1].to_f)
+          rotate = MatrixUtils.multiply_constant(rotate, symbol_table[operation["knob"]]) if $ANIMATION && symbol_table[operation["knob"]]
           $COORDSYS.modify_top(rotate);
         when "pop"
           $COORDSYS.pop()
@@ -169,15 +174,15 @@ module Utils
         when "quit", "exit"
           exit 0
         else
-          puts "WARNING: Unrecognized command: " + operation.to_s
+          #puts "WARNING: Unrecognized command: " + operation.to_s
         end
       end
       if $ANIMATION
-        # fork do
-        #   puts "Fork for frame #{currframe} will begin writing out."
-        write_out(file: "%03d%s.png" % [currframe, $BASENAME])
-        #   puts "Fork for frame #{currframe} is finished. Exiting now."
-        # end
+        fork do
+          puts "FORK: frame #{currframe} created." if $DEBUGGING
+          write_out(file: "%03d%s.png" % [currframe, $BASENAME])
+          puts "FORK: frame #{currframe} finished."
+        end
       end
     end
   end
